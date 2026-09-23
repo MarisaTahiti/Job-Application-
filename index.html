@@ -3,16 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>Mon Assistant Emploi</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+        #cardContainer {
+            width: 320px;
+            height: 420px;
+            margin: 30px auto;
+            position: relative;
+        }
+        .card {
+            width: 300px;
+            height: 400px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute;
+            top: 0; left: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .card h3 { margin-top: 0; }
+        #noMore { margin-top: 30px; font-size: 18px; color: #888; }
+    </style>
 </head>
 <body>
     <h1>Recherche de jobs</h1>
     <button id="searchBtn">Chercher des jobs</button>
-    <div id="results"></div>
+
+    <div id="cardContainer"></div>
+    <p id="noMore" style="display:none;">Plus de jobs à voir pour l'instant !</p>
 
     <h2>Jobs sauvegardés</h2>
     <div id="savedJobs"></div>
 
     <script>
+        let jobs = [];
+        let currentIndex = 0;
+
         function getSavedJobs() {
             const saved = localStorage.getItem('savedJobs');
             return saved ? JSON.parse(saved) : [];
@@ -29,57 +61,4 @@
             });
         }
 
-        function saveJob(job) {
-            const savedJobs = getSavedJobs();
-            savedJobs.push(job);
-            localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
-            displaySavedJobs();
-        }
-
-        document.getElementById('searchBtn').addEventListener('click', async () => {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = 'Chargement...';
-
-            try {
-                const url = 'https://www.themuse.com/api/public/jobs?page=0'
-                    + '&category=Business%20Operations'
-                    + '&category=Management'
-                    + '&category=Corporate'
-                    + '&category=Account%20Management';
-
-                const response = await fetch(url);
-                const data = await response.json();
-
-                // On garde seulement les jobs dont le titre contient "graduate"
-                const jobs = data.results.filter(job =>
-                    job.name.toLowerCase().includes('graduate')
-                );
-
-                resultsDiv.innerHTML = '';
-
-                if (jobs.length === 0) {
-                    resultsDiv.innerHTML = 'Aucun graduate program trouvé sur cette page. Essaie de relancer la recherche (parfois il y en a plus sur d\'autres pages).';
-                }
-
-                jobs.forEach(job => {
-                    const jobDiv = document.createElement('div');
-                    jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
-
-                    const yesBtn = document.createElement('button');
-                    yesBtn.textContent = 'Oui, ça m\'intéresse';
-                    yesBtn.addEventListener('click', () => {
-                        saveJob({ name: job.name, company: job.company.name });
-                    });
-
-                    jobDiv.appendChild(yesBtn);
-                    resultsDiv.appendChild(jobDiv);
-                });
-            } catch (error) {
-                resultsDiv.innerHTML = 'ERREUR : ' + error.message;
-            }
-        });
-
-        displaySavedJobs();
-    </script>
-</body>
-</html>
+        function saveJob(job)
