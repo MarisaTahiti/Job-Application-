@@ -49,9 +49,18 @@
 
                 const response = await fetch(url);
                 const data = await response.json();
-                const jobs = data.results;
+
+                // On garde seulement les jobs dont le titre contient "graduate"
+                const jobs = data.results.filter(job =>
+                    job.name.toLowerCase().includes('graduate')
+                );
 
                 resultsDiv.innerHTML = '';
+
+                if (jobs.length === 0) {
+                    resultsDiv.innerHTML = 'Aucun graduate program trouvé sur cette page. Essaie de relancer la recherche (parfois il y en a plus sur d\'autres pages).';
+                }
+
                 jobs.forEach(job => {
                     const jobDiv = document.createElement('div');
                     jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
