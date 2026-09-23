@@ -61,4 +61,95 @@
             });
         }
 
-        function saveJob(job)
+        function saveJob(job) {
+            const savedJobs = getSavedJobs();
+            savedJobs.push(job);
+            localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+            displaySavedJobs();
+        }
+
+        function renderCard() {
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = '';
+
+            if (currentIndex >= jobs.length) {
+                document.getElementById('noMore').style.display = 'block';
+                return;
+            }
+            document.getElementById('noMore').style.display = 'none';
+
+            const job = jobs[currentIndex];
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p><div>${job.contents}</div>`;
+            container.appendChild(card);
+
+            // --- Gestion du glisser (swipe) ---
+            let startX = 0;
+            let currentX = 0;
+            let dragging = false;
+
+            card.addEventListener('pointerdown', (e) => {
+                dragging = true;
+                startX = e.clientX;
+                card.style.transition = 'none';
+            });
+
+            card.addEventListener('pointermove', (e) => {
+                if (!dragging) return;
+                currentX = e.clientX - startX;
+                card.style.transform = `translateX(${currentX}px) rotate(${currentX / 15}deg)`;
+            });
+
+            card.addEventListener('pointerup', () => {
+                dragging = false;
+                card.style.transition = 'transform 0.3s';
+
+                if (currentX > 100) {
+                    // Swipe à droite = intéressée
+                    card.style.transform = `translateX(600px) rotate(20deg)`;
+                    saveJob({ name: job.name, company: job.company.name });
+                    setTimeout(nextCard, 200);
+                } else if (currentX < -100) {
+                    // Swipe à gauche = pas intéressée
+                    card.style.transform = `translateX(-600px) rotate(-20deg)`;
+                    setTimeout(nextCard, 200);
+                } else {
+                    // Pas assez glissé, la carte revient au centre
+                    card.style.transform = 'translateX(0) rotate(0)';
+                }
+            });
+        }
+
+        function nextCard() {
+            currentIndex++;
+            renderCard();
+        }
+
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            document.getElementById('cardContainer').innerHTML = 'Chargement...';
+
+            try {
+                const url = 'https://www.themuse.com/api/public/jobs?page=0'
+                    + '&category=Business%20Operations'
+                    + '&category=Management'
+                    + '&category=Corporate'
+                    + '&category=Account%20Management';
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                jobs = data.results.filter(job =>
+                    job.name.toLowerCase().includes('graduate')
+                );
+                currentIndex = 0;
+                renderCard();
+            } catch (error) {
+                document.getElementById('cardContainer').innerHTML = 'ERREUR : ' + error.message;
+            }
+        });
+
+        displaySavedJobs();
+    </script>
+</body>
+</html>
