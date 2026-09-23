@@ -15,7 +15,7 @@
             resultsDiv.innerHTML = 'Chargement...';
 
             try {
-                const response = await fetch('https://www.themuse.com/api/public/jobs');
+                const response = await fetch('https://www.themuse.com/api/public/jobs?page=0&category=Business%20Operations');
                 const data = await response.json();
                 const jobs = data.results;
 
