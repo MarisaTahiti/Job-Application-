@@ -9,7 +9,36 @@
     <button id="searchBtn">Chercher des jobs</button>
     <div id="results"></div>
 
+    <h2>Jobs sauvegardés</h2>
+    <div id="savedJobs"></div>
+
     <script>
+        // Va chercher les jobs déjà sauvegardés dans localStorage (ou une liste vide si rien n'existe encore)
+        function getSavedJobs() {
+            const saved = localStorage.getItem('savedJobs');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        // Affiche les jobs sauvegardés à l'écran
+        function displaySavedJobs() {
+            const savedJobs = getSavedJobs();
+            const savedDiv = document.getElementById('savedJobs');
+            savedDiv.innerHTML = '';
+            savedJobs.forEach(job => {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${job.name}</strong> - ${job.company}`;
+                savedDiv.appendChild(div);
+            });
+        }
+
+        // Sauvegarde un job dans localStorage
+        function saveJob(job) {
+            const savedJobs = getSavedJobs();
+            savedJobs.push(job);
+            localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+            displaySavedJobs();
+        }
+
         document.getElementById('searchBtn').addEventListener('click', async () => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = 'Chargement...';
@@ -17,19 +46,29 @@
             try {
                 const response = await fetch('https://www.themuse.com/api/public/jobs?page=0');
                 const data = await response.json();
-                console.log(data);
-
                 const jobs = data.results;
+
                 resultsDiv.innerHTML = '';
                 jobs.forEach(job => {
                     const jobDiv = document.createElement('div');
                     jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
+
+                    const yesBtn = document.createElement('button');
+                    yesBtn.textContent = 'Oui, ça m\'intéresse';
+                    yesBtn.addEventListener('click', () => {
+                        saveJob({ name: job.name, company: job.company.name });
+                    });
+
+                    jobDiv.appendChild(yesBtn);
                     resultsDiv.appendChild(jobDiv);
                 });
             } catch (error) {
                 resultsDiv.innerHTML = 'ERREUR : ' + error.message;
             }
         });
+
+        // Au chargement de la page, affiche les jobs déjà sauvegardés
+        displaySavedJobs();
     </script>
 </body>
 </html>
