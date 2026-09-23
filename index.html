@@ -15,14 +15,15 @@
             resultsDiv.innerHTML = 'Chargement...';
 
             try {
-                const response = await fetch('https://www.themuse.com/api/public/jobs?page=0&category=Business%20Operations');
+                const response = await fetch('https://www.themuse.com/api/public/jobs?page=0');
                 const data = await response.json();
-                const jobs = data.results;
+                console.log(data);
 
+                const jobs = data.results;
                 resultsDiv.innerHTML = '';
                 jobs.forEach(job => {
                     const jobDiv = document.createElement('div');
-                    jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p><p><em>${job.categories.map(c => c.name).join(', ')}</em></p>`;
+                    jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
                     resultsDiv.appendChild(jobDiv);
                 });
             } catch (error) {
