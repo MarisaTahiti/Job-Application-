@@ -84,7 +84,6 @@
             card.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p><div>${job.contents}</div>`;
             container.appendChild(card);
 
-            // --- Gestion du glisser (swipe) ---
             let startX = 0;
             let currentX = 0;
             let dragging = false;
@@ -106,16 +105,13 @@
                 card.style.transition = 'transform 0.3s';
 
                 if (currentX > 100) {
-                    // Swipe à droite = intéressée
                     card.style.transform = `translateX(600px) rotate(20deg)`;
                     saveJob({ name: job.name, company: job.company.name });
                     setTimeout(nextCard, 200);
                 } else if (currentX < -100) {
-                    // Swipe à gauche = pas intéressée
                     card.style.transform = `translateX(-600px) rotate(-20deg)`;
                     setTimeout(nextCard, 200);
                 } else {
-                    // Pas assez glissé, la carte revient au centre
                     card.style.transform = 'translateX(0) rotate(0)';
                 }
             });
@@ -130,16 +126,28 @@
             document.getElementById('cardContainer').innerHTML = 'Chargement...';
 
             try {
-                const url = 'https://www.themuse.com/api/public/jobs?page=0'
-                    + '&category=Business%20Operations'
+                const baseParams = '&category=Business%20Operations'
                     + '&category=Management'
                     + '&category=Corporate'
                     + '&category=Account%20Management';
 
-                const response = await fetch(url);
-                const data = await response.json();
+                // On prépare 5 requêtes, une par page (0 à 4)
+                const pagePromises = [];
+                for (let page = 0; page < 5; page++) {
+                    const url = `https://www.themuse.com/api/public/jobs?page=${page}${baseParams}`;
+                    pagePromises.push(fetch(url).then(res => res.json()));
+                }
 
-                jobs = data.results.filter(job =>
+                // On attend que les 5 requêtes soient toutes terminées
+                const allPages = await Promise.all(pagePromises);
+
+                // On combine tous les résultats des 5 pages en une seule liste
+                let allJobs = [];
+                allPages.forEach(pageData => {
+                    allJobs = allJobs.concat(pageData.results);
+                });
+
+                jobs = allJobs.filter(job =>
                     job.name.toLowerCase().includes('graduate')
                 );
                 currentIndex = 0;
