@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Mon Assistant Emploi</title>
 </head>
 <body>
-    <h1>Bienvenue dans mon assistant de recherche d'emploi</h1>
-    <p>Le projet commence ici !</p>
+    <h1>Recherche de jobs</h1>
+    <button id="searchBtn">Chercher des jobs</button>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const response = await fetch('https://www.themuse.com/api/public/jobs?category=Business');
+            const data = await response.json();
+            const jobs = data.results;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            jobs.forEach(job => {
+                const jobDiv = document.createElement('div');
+                jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
+                resultsDiv.appendChild(jobDiv);
+            });
+        });
+    </script>
 </body>
 </html>
