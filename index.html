@@ -11,18 +11,23 @@
 
     <script>
         document.getElementById('searchBtn').addEventListener('click', async () => {
-            const response = await fetch('https://www.themuse.com/api/public/jobs?category=Business');
-            const data = await response.json();
-            const jobs = data.results;
-
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
+            resultsDiv.innerHTML = 'Chargement...';
 
-            jobs.forEach(job => {
-                const jobDiv = document.createElement('div');
-                jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
-                resultsDiv.appendChild(jobDiv);
-            });
+            try {
+                const response = await fetch('https://www.themuse.com/api/public/jobs?category=Business');
+                const data = await response.json();
+                const jobs = data.results;
+
+                resultsDiv.innerHTML = '';
+                jobs.forEach(job => {
+                    const jobDiv = document.createElement('div');
+                    jobDiv.innerHTML = `<h3>${job.name}</h3><p>${job.company.name}</p>`;
+                    resultsDiv.appendChild(jobDiv);
+                });
+            } catch (error) {
+                resultsDiv.innerHTML = 'ERREUR : ' + error.message;
+            }
         });
     </script>
 </body>
