@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Trail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface-2: #eaf1ef;
+    --ink: #12201d;
+    --ink-soft: #5b6b67;
+    --accent: #0f766e;
+    --accent-soft: #d7ece9;
+    --amber: #b45309;
+    --amber-soft: #fdecd2;
+    --line: #dbe5e2;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101615; --surface: #182220; --surface-2: #1e2b28;
+      --ink: #eef3f1; --ink-soft: #9db0ac; --accent: #4fd6c4;
+      --accent-soft: #1c3733; --amber: #f2b866; --amber-soft: #3a2a12; --line: #2a3835;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101615; --surface: #182220; --surface-2: #1e2b28;
+    --ink: #eef3f1; --ink-soft: #9db0ac; --accent: #4fd6c4;
+    --accent-soft: #1c3733; --amber: #f2b866; --amber-soft: #3a2a12; --line: #2a3835;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+  }
+
+  header h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.8rem, 5vw, 2.3rem);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    color: var(--ink-soft);
+    margin: 0 0 26px 0;
+    font-size: 0.98rem;
+    max-width: 46ch;
+    line-height: 1.5;
+  }
+
+  .tabs {
+    display: inline-flex;
+    background: var(--surface-2);
+    border-radius: 999px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tabs button {
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 9px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .tabs button.active {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+
+  .panel h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0 0 16px 0;
+  }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 150px; }
+
+  .btn {
+    background: var(--accent);
+    color: var(--surface);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+  .btn.small { padding: 7px 14px; font-size: 0.82rem; }
+
+  #status, #savedStatus { color: var(--ink-soft); font-size: 0.88rem; margin: 2px 0 14px 0; min-height: 1.2em; }
+
+  .job-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .job-card.saved-card { border-left-color: var(--amber); }
+
+  .job-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .job-card h3 { margin: 0 0 4px 0; font-size: 1.02rem; font-weight: 600; }
+  .job-card .company { color: var(--accent); font-weight: 600; font-size: 0.88rem; }
+  .job-card .meta { color: var(--ink-soft); font-size: 0.83rem; margin: 6px 0 12px 0; }
+
+  .match-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .match-badge.mid { background: var(--amber-soft); color: var(--amber); }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tag {
+    font-size: 0.74rem;
+    background: var(--surface-2);
+    padding: 2px 9px;
+    border-radius: 999px;
+    color: var(--ink-soft);
+  }
+
+  .card-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .card-actions a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.88rem; }
+  .card-actions a:hover { text-decoration: underline; }
+
+  .save-toggle {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 11px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .save-toggle.is-saved {
+    background: var(--amber-soft);
+    color: var(--amber);
+    border-color: transparent;
+  }
+
+  textarea.note {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    resize: vertical;
+    min-height: 50px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--ink-soft);
+  }
+  .empty .big { font-size: 2rem; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Job Trail</h1>
+    <p>Set your profile once, pull fresh remote listings anytime, and keep a running list of the ones worth a second look.</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tabSearchBtn" class="active" onclick="switchTab('search')">Search</button>
+    <button id="tabSavedBtn" onclick="switchTab('saved')">Saved <span id="savedCount"></span></button>
+  </div>
+
+  <!-- SEARCH VIEW -->
+  <div id="searchView" class="view active">
+    <div class="panel">
+      <h2>Your profile</h2>
+      <label for="skills">Skills / keywords (comma separated)</label>
+      <input type="text" id="skills" placeholder="e.g. python, sql, excel" />
+      <div class="row">
+        <div>
+          <label for="title">Desired job title</label>
+          <input type="text" id="title" placeholder="e.g. data analyst" />
+        </div>
+        <div>
+          <label for="location">Preferred location</label>
+          <input type="text" id="location" placeholder="e.g. USA, Europe" />
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="saveProfile()">Save profile</button>
+        <button class="btn ghost" onclick="clearProfile()">Clear</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Find matching jobs</h2>
+      <button id="searchBtn" class="btn" onclick="searchJobs()">Pull latest jobs & match</button>
+      <div id="status">Save your profile above, then click the button.</div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <!-- SAVED VIEW -->
+  <div id="savedView" class="view">
+    <div id="savedStatus"></div>
+    <div id="savedResults"></div>
+  </div>
+</div>
+
+<script>
+  const PROFILE_KEY = 'jobTrailProfile';
+  const SAVED_KEY = 'jobTrailSavedJobs';
+
+  function switchTab(tab) {
+    document.getElementById('searchView').classList.toggle('active', tab === 'search');
+    document.getElementById('savedView').classList.toggle('active', tab === 'saved');
+    document.getElementById('tabSearchBtn').classList.toggle('active', tab === 'search');
+    document.getElementById('tabSavedBtn').classList.toggle('active', tab === 'saved');
+    if (tab === 'saved') renderSaved();
+  }
+
+  function loadProfile() {
+    try {
+      const saved = localStorage.getItem(PROFILE_KEY);
+      if (saved) {
+        const p = JSON.parse(saved);
+        document.getElementById('skills').value = p.skills || '';
+        document.getElementById('title').value = p.title || '';
+        document.getElementById('location').value = p.location || '';
+      }
+    } catch (e) {}
+  }
+
+  function saveProfile() {
+    const profile = {
+      skills: document.getElementById('skills').value.trim(),
+      title: document.getElementById('title').value.trim(),
+      location: document.getElementById('location').value.trim()
+    };
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      document.getElementById('status').textContent = 'Profile saved. Click "Pull latest jobs & match" below.';
+    } catch (e) {
+      document.getElementById('status').textContent = 'Could not save profile in this browser.';
+    }
+  }
+
+  function clearProfile() {
+    localStorage.removeItem(PROFILE_KEY);
+    ['skills', 'title', 'location'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('status').textContent = 'Profile cleared.';
+  }
+
+  function getSavedJobs() {
+    try {
+      return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+    } catch (e) { return []; }
+  }
+
+  function setSavedJobs(jobs) {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(jobs));
+    updateSavedCount();
+  }
+
+  function updateSavedCount() {
+    const count = getSavedJobs().length;
+    document.getElementById('savedCount').textContent = count > 0 ? '(' + count + ')' : '';
+  }
+
+  function isJobSaved(jobId) {
+    return getSavedJobs().some(j => j.id === jobId);
+  }
+
+  function toggleSaveJob(job) {
+    let saved = getSavedJobs();
+    if (isJobSaved(job.id)) {
+      saved = saved.filter(j => j.id !== job.id);
+    } else {
+      saved.push({ ...job, note: '' });
+    }
+    setSavedJobs(saved);
+  }
+
+  function updateNote(jobId, note) {
+    const saved = getSavedJobs();
+    const job = saved.find(j => j.id === jobId);
+    if (job) job.note = note;
+    setSavedJobs(saved);
+  }
+
+  function removeSaved(jobId) {
+    setSavedJobs(getSavedJobs().filter(j => j.id !== jobId));
+    renderSaved();
+  }
+
+  function getKeywords() {
+    const skills = document.getElementById('skills').value.trim();
+    const title = document.getElementById('title').value.trim();
+    const combined = (skills + ',' + title)
+      .split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+    return [...new Set(combined)];
+  }
+
+  function scoreJob(job, keywords) {
+    const haystack = ((job.title || '') + ' ' + (job.description || '') + ' ' + (job.tags ? job.tags.join(' ') : '')).toLowerCase();
+    const matched = keywords.filter(k => haystack.includes(k));
+    const score = keywords.length > 0 ? Math.round((matched.length / keywords.length) * 100) : 0;
+    return { score, matched };
+  }
+
+  function jobCardHtml(job, opts) {
+    const saved = isJobSaved(job.id);
+    const badgeClass = opts.score >= 60 ? '' : 'mid';
+    const scoreHtml = opts.showScore ? `<span class="match-badge ${badgeClass}">${opts.score}% match</span>` : '';
+    const tagsHtml = opts.matched && opts.matched.length
+      ? `<div class="tag-row">${opts.matched.map(m => `<span class="tag">${escapeHtml(m)}</span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="job-top">
+        <div>
+          <h3>${escapeHtml(job.title)}</h3>
+          <div class="company">${escapeHtml(job.company_name)}</div>
+        </div>
+        ${scoreHtml}
+      </div>
+      <div class="meta">${escapeHtml(job.candidate_required_location || 'Location not specified')} · ${escapeHtml(job.job_type || '')}</div>
+      ${tagsHtml}
+      <div class="card-actions">
+        <a href="${job.url}" target="_blank" rel="noopener">View job →</a>
+        <button class="save-toggle ${saved ? 'is-saved' : ''}" onclick='handleSaveClick(${JSON.stringify(job.id)})'>${saved ? '★ Saved' : '☆ Save'}</button>
+      </div>
+    `;
+  }
+
+  let lastJobsById = {};
+
+  function handleSaveClick(jobId) {
+    const job = lastJobsById[jobId];
+    if (job) {
+      toggleSaveJob(job);
+      searchResultsRerender();
+    }
+  }
+
+  let lastScored = [];
+
+  function searchResultsRerender() {
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = '';
+    lastScored.forEach(({ job, score, matched }) => {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.innerHTML = jobCardHtml(job, { score, matched, showScore: true });
+      resultsEl.appendChild(card);
+    });
+  }
+
+  async function searchJobs() {
+    const keywords = getKeywords();
+    const desiredTitle = document.getElementById('title').value.trim();
+    const location = document.getElementById('location').value.trim();
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const btn = document.getElementById('searchBtn');
+
+    if (keywords.length === 0) {
+      statusEl.textContent = 'Add at least a skill or a job title first, then save your profile.';
+      return;
+    }
+
+    resultsEl.innerHTML = '';
+    btn.disabled = true;
+    statusEl.textContent = 'Pulling jobs and matching against your profile...';
+
+    try {
+      let url = 'https://remotive.com/api/remote-jobs';
+      if (desiredTitle) url += '?search=' + encodeURIComponent(desiredTitle);
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Request failed with status ' + response.status);
+
+      const data = await response.json();
+      let jobs = data.jobs || [];
+
+      if (location) {
+        const locLower = location.toLowerCase();
+        jobs = jobs.filter(j => (j.candidate_required_location || '').toLowerCase().includes(locLower));
+      }
+
+      jobs.forEach(j => { lastJobsById[j.id] = j; });
+
+      const scored = jobs.map(job => {
+        const { score, matched } = scoreJob(job, keywords);
+        return { job, score, matched };
+      });
+      scored.sort((a, b) => b.score - a.score);
+      lastScored = scored.filter(r => r.score > 0).slice(0, 20);
+
+      if (lastScored.length === 0) {
+        statusEl.textContent = 'No matches found. Try broadening your skills or title.';
+        return;
+      }
+
+      statusEl.textContent = 'Showing top ' + lastScored.length + ' matches, best first:';
+      searchResultsRerender();
+
+    } catch (err) {
+      statusEl.textContent = 'Something went wrong: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderSaved() {
+    const saved = getSavedJobs();
+    const statusEl = document.getElementById('savedStatus');
+    const resultsEl = document.getElementById('savedResults');
+    resultsEl.innerHTML = '';
+
+    if (saved.length === 0) {
+      statusEl.textContent = '';
+      resultsEl.innerHTML = `
+        <div class="empty">
+          <div class="big">📌</div>
+          <div>No saved jobs yet. Star a job from the Search tab to keep it here.</div>
+        </div>`;
+      return;
+    }
+
+    statusEl.textContent = saved.length + ' saved job' + (saved.length === 1 ? '' : 's') + ':';
+
+    saved.forEach(job => {
+      const card = document.createElement('div');
+      card.className = 'job-card saved-card';
+      card.innerHTML = jobCardHtml(job, { showScore: false }) +
+        `<textarea class="note" placeholder="Add a note (e.g. applied on...)" data-jobid="${escapeHtml(job.id)}">${escapeHtml(job.note || '')}</textarea>
+         <div style="margin-top:10px;">
+           <button class="btn small ghost" onclick='removeSaved(${JSON.stringify(job.id)})'>Remove</button>
+         </div>`;
+      resultsEl.appendChild(card);
+
+      const textarea = card.querySelector('textarea.note');
+      textarea.addEventListener('input', () => updateNote(job.id, textarea.value));
+    });
+  }
+
+  function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  loadProfile();
+  updateSavedCount();
+</script>
+
+</body>
+</html>
